@@ -64,11 +64,11 @@
 
 <body>
     <script>
-        const localName = "<%= name %>";
-        const ws = new WebSocket("ws://localhost:1000");
+        const localUser = "<%= user %>";
+        const ws = new WebSocket("ws://localhost:3000");
 
         ws.onopen = () => {
-            ws.send(JSON.stringify({ name: localName }));
+            ws.send(JSON.stringify({ user: localUser }));
         };
 
         ws.onmessage = (event) => {
@@ -78,9 +78,9 @@
                 if (message.list) {
                     const users = document.getElementById("users");
                     users.innerHTML = ""; // Clear before updating
-                    message.list.forEach(name => {
+                    message.list.forEach(user => {
                         const li = document.createElement('li');
-                        li.textContent = name;
+                        li.textContent = user;
                         users.appendChild(li);
                     });
                 }
@@ -105,7 +105,7 @@
             const messageInput = document.getElementById("messageInput");
             const messageText = messageInput.value.trim();
             if (messageText) {
-                const message = { text: messageText, name: localName };
+                const message = { text: messageText, user: localUser };
                 ws.send(JSON.stringify(message));
                 messageInput.value = ""; // Clear input after sending
             }
@@ -118,7 +118,7 @@
     </div>
 
     <div class="chat-box">
-        <h4>Welcome to the chat, <%= name %>!</h4>
+        <h4>Welcome to the chat, <%= user %>!</h4>
         <input type="text" id="messageInput" placeholder="Type a message" size="70">
         <input id="sendButton" type="submit" value="Send" onclick="sendMessage()">
         <div id="sentMessages"></div>

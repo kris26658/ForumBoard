@@ -54,8 +54,8 @@ function broadcast(wss, data) {
 function userList(wss) {
     let users = [];
     wss.clients.forEach(client => {
-        if (client.name) {
-            users.push(client.name);
+        if (client.user) {
+            users.push(client.user);
         };
     });
     return { list: users };
@@ -90,16 +90,6 @@ app.get("/", (req, res) => {
 //handle login
 app.post("/", (req, res) => {
     if (req.body.user && req.body.pass) {
-        db.get("SELECT * FROM users WHERE username = ?", [user], function (err, row) {
-            if (err) {
-                res.render("error", {error: "Error checking for existing users."});
-                return;
-            };
-            if (row) {
-                res.render("error", {error: "Username or email is already in use." });
-                return;
-            };
-        });
         db.get("SELECT * FROM users WHERE username=?;", req.body.user, (err, row) => {
             if (err) {
                 console.log(err);
@@ -119,8 +109,7 @@ app.post("/", (req, res) => {
                             if (err) {
                                 res.send("Database error: \n" + err);
                             } else {
-
-                                res.redirect("/index");
+                                res.send("Created a new user.");
                             };
                         });
                     };
@@ -150,9 +139,5 @@ app.post("/", (req, res) => {
 
 //handle chat
 app.get("/chat", isAuthenticated, (req, res) => {
-    const name = req.body.user;
-    if (!name) {
-        return res.redirect("/");
-    };
     res.render("chat", { user: req.session.user })
 });
