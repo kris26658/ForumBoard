@@ -12,6 +12,9 @@ const app = express(); //initialize express with app
 app.set("view engine", "ejs"); // set view engine
 app.use(express.urlencoded({ extended: true })); //encode url
 
+//allows calling of files in public folder
+app.use(express.static('public'))
+
 app.use(session({
     secret: "Secret hehe",
     resave: false,
