@@ -1,4 +1,4 @@
-//to install required modules, in terminal: "npm i sqlite3 express ejs crypto jsonwebtoken express-session ws http"
+//to install required modules, in terminal: "npm i sqlite3 express ejs crypto jsonwebtoken express-session"
 
 const sqlite3 = require("sqlite3"); //import sqlite3
 const express = require("express"); //import express
@@ -18,14 +18,7 @@ app.use(session({
     saveUninitialized: false
 }));
 
-/*--------------
-WebSocket Server
---------------*/
-
 const PORT = 3000 //set port number
-
-const WebSocket = require("ws"); //import WebSocket
-const wss = new WebSocket.Server({ server: app }); //create new WebSocket server, attach it to http server
 
 const db = new sqlite3.Database("data/database.db", (err) => {
     if (err) {
@@ -42,18 +35,9 @@ function isAuthenticated(req, res, next) {
     else res.redirect("/login")
 };
 
-function broadcast(wss, data) {
-    const message = JSON.stringify(data);
-    wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(message);
-        };
-    });
-};
-
-function userList(wss) {
+function userList(app) {
     let users = [];
-    wss.clients.forEach(client => {
+    app.clients.forEach(client => {
         if (client.user) {
             users.push(client.user);
         };
@@ -61,22 +45,48 @@ function userList(wss) {
     return { list: users };
 };
 
-wss.on("connection", (ws => { //on connection to WebSocket server
-    ws.on("close", () => console.log(`${ws.name} has disconnected.`)); //user disconnects
-    broadcast(wss, userList(wss)); //reload user list
+app.on("connection", (app => { //on connection to server
+    app.on("close", () => console.log(`${app.user} has disconnected.`)); //user disconnects
+    broadcast(app, userList(app)); //reload user list
 
-    ws.on("message", (data) => {
+    app.on("message", (data) => {
         const parsedMsg = JSON.parse(data); //parse incoming message
 
-        if (parsedMsg.name) {
-            ws.name = parsedMsg.name;
-            broadcast(wss, userList(wss));
+        if (parsedMsg.user) {
+            app.user = parsedMsg.user;
+            broadcast(app, userList(app));
         };
         if (parsedMsg.text) {
-            broadcast(wss, { user: ws.name, text: parsedMsg.text });
+            broadcast(app, { user: app.user, text: parsedMsg.text });
         };
     });
 }));
+
+app.message = (event) => {
+    try {
+        const message = JSON.parse(event.data);
+
+        if (message.list) {
+            const users = document.getElementById("users");
+            users.innerHTML = ""; // Clear before updating
+            message.list.forEach(user => {
+                const li = document.createElement('li');
+                li.textContent = user;
+                users.appendChild(li);
+            });
+        }
+
+        if (message.text) {
+            const messages = document.getElementById("sentMessages");
+            const p = document.createElement("p");
+            p.textContent = `${message.user}: ${message.text}`;
+            messages.appendChild(p);
+            messages.scrollTop = messages.scrollHeight; //scroll to latest message
+        }
+    } catch (error) {
+        console.error("Error parsing message:", error);
+    }
+};
 
 /*---------------
 GET/POST Requests
@@ -90,6 +100,7 @@ app.get("/", (req, res) => {
 //handle login
 app.post("/", (req, res) => {
     if (req.body.user && req.body.pass) {
+        //users table
         db.get("SELECT * FROM users WHERE username=?;", req.body.user, (err, row) => {
             if (err) {
                 console.log(err);
@@ -135,6 +146,10 @@ app.post("/", (req, res) => {
     } else {
         res.send("Please enter both a username and password");
     };
+    //posts table
+
+    //convos table
+
 });
 
 //handle chat
