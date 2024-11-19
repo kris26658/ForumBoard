@@ -1,4 +1,4 @@
-//to install required modules, in terminal: "npm i sqlite3 express ejs ws http"
+//to install required modules, in terminal: "npm i sqlite3 express ejs crypto jsonwebtoken express-session ws http"
 
 const sqlite3 = require("sqlite3"); //import sqlite3
 const express = require("express"); //import express
@@ -24,8 +24,13 @@ HTTP Server
 
 const http = require('http').Server(app); //import http, create http server and associate it with express
 
-const PORT = process.env.PORT || 1000; //change port number from default
+const PORT = process.env.PORT || 3001; //change port number from default
 http.listen(PORT, console.log(`Server started on port ${PORT}`)); //start http server, listen on given port
+
+//handle errors
+http.on("error", (err) => {
+    throw err;
+});
 
 /*--------------
 WebSocket Server
@@ -111,11 +116,11 @@ app.post("/login", (req, res) => {
                         res.send("Error hashing password: " + err);
                     } else {
                         const hashedPassword = derivedKey.toString("hex");
-                        
+
                         db.run("INSERT INTO users (username, email, password, salt) VALUES (?, ?, ?, ?);", [req.body.user, req.body.email, hashedPassword, salt], (err) => {
                             if (err) {
                                 res.send("Database error: \n" + err);
-                            } else{
+                            } else {
                                 res.send("Created new user");
                             };
                         });
@@ -128,7 +133,7 @@ app.post("/login", (req, res) => {
                         res.send("Error hashing password: " + err);
                     } else {
                         const hashedPassword = derivedKey.toString("hex");
-                        
+
                         if (row.password === hashedPassword) {
                             req.session.user = req.body.user;
                             res.redirect("/chat");
@@ -146,10 +151,9 @@ app.post("/login", (req, res) => {
 
 //handle chat
 app.get("/chat", isAuthenticated, (req, res) => {
-    try {
-        res.render("chat", { user: req.session.user })
-    }
-    catch (error) {
-        res.send(error.message)
-    }
+    const name = req.body.user;
+    if (!name) {
+        return res.redirect("/");
+    };
+    res.render("chat", { user: req.session.user })
 });
