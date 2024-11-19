@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .user-list {
+            float: left;
+            width: 150px;
+            padding: 10px;
+            margin-right: 20px;
+            background-color: #cacaca;
+        }
+
+        .chat-box {
+            width: calc(100% - 370px);
+            padding: 10px;
+            background-color: #cacaca;
+            overflow: hidden;
+        }
+
+        #sentMessages {
+            height: 750px;
+            padding: 10px;
+            margin-top: 5px;
+            background-color: white;
+            border: 1px solid #ccc;
+            overflow-y: auto;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 100px);
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        input[type="submit"] {
+            padding: 10px 20px;
+            color: #f4f4f4;
+            background-color: #6e6e6e;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+
+        h3 {
+            margin: 5px;
+        }
+
+        h4 {
+            margin: 5px;
+        }
+
+    </style>
+</head>
+
+<body>
+    <script>
+        const localName = "<%= name %>";
+        const ws = new WebSocket("ws://localhost:1000");
+
+        ws.onopen = () => {
+            ws.send(JSON.stringify({ name: localName }));
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const message = JSON.parse(event.data);
+
+                if (message.list) {
+                    const users = document.getElementById("users");
+                    users.innerHTML = ""; // Clear before updating
+                    message.list.forEach(name => {
+                        const li = document.createElement('li');
+                        li.textContent = name;
+                        users.appendChild(li);
+                    });
+                }
+
+                if (message.text) {
+                    const messages = document.getElementById("sentMessages");
+                    const p = document.createElement("p");
+                    p.textContent = `${message.user}: ${message.text}`;
+                    messages.appendChild(p);
+                    messages.scrollTop = messages.scrollHeight; // Scroll to latest message
+                }
+            } catch (error) {
+                console.error("Error parsing message:", error);
+            }
+        };
+
+        ws.onerror = (error) => {
+            console.error("WebSocket error:", error);
+        };
+
+        function sendMessage() {
+            const messageInput = document.getElementById("messageInput");
+            const messageText = messageInput.value.trim();
+            if (messageText) {
+                const message = { text: messageText, name: localName };
+                ws.send(JSON.stringify(message));
+                messageInput.value = ""; // Clear input after sending
+            }
+        }
+    </script>
+
+    <div class="user-list">
+        <h3>Online Users:</h3>
+        <ul id="users"></ul>
+    </div>
+
+    <div class="chat-box">
+        <h4>Welcome to the chat, <%= name %>!</h4>
+        <input type="text" id="messageInput" placeholder="Type a message" size="70">
+        <input id="sendButton" type="submit" value="Send" onclick="sendMessage()">
+        <div id="sentMessages"></div>
+    </div>
+</body>
+
+</html>

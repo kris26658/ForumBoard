@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello, User</title>
+</head>
+
+<body>
+    <form id="userForm">
+        <label for="username">Enter your username:</label>
+        <input type="text" id="username" name="username" required>
+        <input type="submit" value="Submit">
+    </form>
+
+    <script>
+        document.getElementById("userForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            const givenName = document.getElementById("username").value;
+            if (givenName) {
+                window.location.href = `/chat?name=${encodeURIComponent(givenName)}`;
+            }
+        });
+    </script>
+</body>
+
+</html>
