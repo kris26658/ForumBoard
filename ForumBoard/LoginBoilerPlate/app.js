@@ -18,7 +18,7 @@ app.use(session({
     saveUninitialized: false
 }));
 
-const PORT = 3000 //set port number
+const PORT = 2000 //set port number
 
 function isAuthenticated(req, res, next) {
     if (req.session.user) next()

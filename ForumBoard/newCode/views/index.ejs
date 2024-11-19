@@ -4,25 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello, User</title>
+    <title>Login</title>
 </head>
 
 <body>
-    <form id="userForm">
-        <label for="username">Enter your username:</label>
-        <input type="text" id="username" name="username" required>
+    <h2>Hello! Please log in to the forum below:</h2>
+    <p>"Successfully created a new user. Please log in again."</p>
+    <form id="userForm" action="/" method="post">
+        <input name="user" type="text" placeholder="Username">
+        <input name="pass" type="password" placeholder="Password">
         <input type="submit" value="Submit">
     </form>
-
-    <script>
-        document.getElementById("userForm").addEventListener("submit", function (event) {
-            event.preventDefault();
-            const givenName = document.getElementById("username").value;
-            if (givenName) {
-                window.location.href = `/chat?name=${encodeURIComponent(givenName)}`;
-            }
-        });
-    </script>
 </body>
 
 </html>

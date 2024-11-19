@@ -18,26 +18,14 @@ app.use(session({
     saveUninitialized: false
 }));
 
-/*---------
-HTTP Server
----------*/
-
-const http = require('http').Server(app); //import http, create http server and associate it with express
-
-const PORT = process.env.PORT || 3001; //change port number from default
-http.listen(PORT, console.log(`Server started on port ${PORT}`)); //start http server, listen on given port
-
-//handle errors
-http.on("error", (err) => {
-    throw err;
-});
-
 /*--------------
 WebSocket Server
 --------------*/
 
+const PORT = 3000 //set port number
+
 const WebSocket = require("ws"); //import WebSocket
-const wss = new WebSocket.Server({ server: http }); //create new WebSocket server, attach it to http server
+const wss = new WebSocket.Server({ server: app }); //create new WebSocket server, attach it to http server
 
 const db = new sqlite3.Database("data/database.db", (err) => {
     if (err) {
@@ -100,8 +88,18 @@ app.get("/", (req, res) => {
 });
 
 //handle login
-app.post("/login", (req, res) => {
-    if (req.body.user && req.body.email && req.body.pass) {
+app.post("/", (req, res) => {
+    if (req.body.user && req.body.pass) {
+        db.get("SELECT * FROM users WHERE username = ?", [user], function (err, row) {
+            if (err) {
+                res.render("error", {error: "Error checking for existing users."});
+                return;
+            };
+            if (row) {
+                res.render("error", {error: "Username or email is already in use." });
+                return;
+            };
+        });
         db.get("SELECT * FROM users WHERE username=?;", req.body.user, (err, row) => {
             if (err) {
                 console.log(err);
@@ -117,11 +115,12 @@ app.post("/login", (req, res) => {
                     } else {
                         const hashedPassword = derivedKey.toString("hex");
 
-                        db.run("INSERT INTO users (username, email, password, salt) VALUES (?, ?, ?, ?);", [req.body.user, req.body.email, hashedPassword, salt], (err) => {
+                        db.run("INSERT INTO users (username, password, salt) VALUES (?, ?, ?);", [req.body.user, hashedPassword, salt], (err) => {
                             if (err) {
                                 res.send("Database error: \n" + err);
                             } else {
-                                res.send("Created new user");
+
+                                res.redirect("/index");
                             };
                         });
                     };
@@ -145,7 +144,7 @@ app.post("/login", (req, res) => {
             };
         });
     } else {
-        res.send("Please enter a username, email, and password");
+        res.send("Please enter both a username and password");
     };
 });
 
