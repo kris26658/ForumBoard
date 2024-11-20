@@ -159,3 +159,8 @@ app.post("/", (req, res) => {
 app.get("/chat", isAuthenticated, (req, res) => {
     res.render("chat", { user: req.session.user })
 });
+
+//handle convoList
+app.get("/convoList", isAuthenticated, (req, res) => {
+    res.render("convoList")
+});

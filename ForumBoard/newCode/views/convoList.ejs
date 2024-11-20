@@ -9,17 +9,23 @@
 
 <body>
     <script>
+        var convoList = [];
+
+        db.get("SELECT * FROM convos WHERE title=?;", () => {
+            if (err) {
+                console.log(err);
+                res.send("There was an error:\n" + err);
+            } else if (row) {
+                forEach(row => {
+                    convoList.push(row)
+                });
+            } else {
+                convoList.push("There are no active conversations.")
+            };
+        });
+        
         function chat() {
             //take the user to selected conversation
-            db.get("SELECT * FROM convos WHERE title=?;", () => {
-                if (err) {
-                    console.log(err);
-                    res.send("There was an error:\n" + err);
-                } else if (row) {
-
-
-                };
-            });
         };
 
         function newConvo() {
@@ -45,7 +51,7 @@
         <p>Choose from an exisitng conversation...</p>
         <form>
             <% convoList.forEach(convo=> { %>
-                <button id="convoButton" class="convoTitle" onclick="chat()" size="70">
+                <button id="convoButton" class="convoTitle" value="button" size="70" onclick="chat()">
                     <% }) %>
         </form>
     </div>
