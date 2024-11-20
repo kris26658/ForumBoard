@@ -138,7 +138,7 @@ app.post("/", (req, res) => {
 
                         if (row.password === hashedPassword) {
                             req.session.user = req.body.user;
-                            res.redirect("/chat");
+                            res.redirect("/convoList");
                         } else {
                             res.send("Incorrect Password.")
                         };
