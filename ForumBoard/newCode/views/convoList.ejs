@@ -16,18 +16,26 @@
                     console.log(err);
                     res.send("There was an error:\n" + err);
                 } else if (row) {
-                    
+
 
                 };
             });
         };
 
         function newConvo() {
-            db.run("INSERT INTO convos (title) VALUES (?);", [req.body.convoTitle], (err) => {
+            db.get("SELECT * FROM users WHERE username=?;", req.body.convoTitle, (err, row) => {
                 if (err) {
                     res.send("Database error: \n" + err);
+                } else if (row) {
+                    res.send("There is already a conversation with that title.");
                 } else {
-                    res.send("Created a new user.");
+                    db.run("INSERT INTO convos (title) VALUES (?);", req.body.convoTitle, (err, row) => {
+                        if (err) {
+                            res.send("Database error: \n" + err);
+                        } else {
+                            res.send("Created a new conversation.");
+                        };
+                    });
                 };
             });
         };
@@ -38,14 +46,15 @@
         <form>
             <% convoList.forEach(convo=> { %>
                 <button id="convoButton" class="convoTitle" onclick="chat()" size="70">
-            <% }) %>
+                    <% }) %>
         </form>
     </div>
 
     <div class="newConvo">
         <p>...or create a new one!</p>
         <form>
-            <input id="newConvoTitle" class="convoTitle" type="text" placeholder="Add a title for the new conversation" size="70">
+            <input id="newConvoTitle" class="convoTitle" type="text" placeholder="Add a title for the new conversation"
+                size="70" method="post">
         </form>
     </div>
 
