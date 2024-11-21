@@ -33,9 +33,11 @@ const db = new sqlite3.Database("data/database.db", (err) => {
     };
 });
 
+
+
 function isAuthenticated(req, res, next) {
     if (req.session.user) next()
-    else res.redirect("/login")
+    else res.redirect("/")
 };
 
 function userList(app) {
@@ -137,7 +139,7 @@ app.post("/", (req, res) => {
 
                         if (row.password === hashedPassword) {
                             req.session.user = req.body.user;
-                            res.render("convoList");
+                            res.redirect("/chat"); 
                         } else {
                             res.send("Incorrect Password.")
                         };
@@ -192,19 +194,12 @@ app.post("/convoList", isAuthenticated, (req, res) => {
 
 //handle chat
 app.get("/chat", isAuthenticated, (req, res) => {
-    const convoTitle = req.query.title;
-    if (!convoTitle) {
-        return res.status(400).send("Conversation title is required.");
-    }
-
-    db.get("SELECT * FROM convos WHERE title = ?;", [convoTitle], (err, row) => {
+    db.all("SELECT * FROM posts WHERE poster = ?", [req.session.user], (err, rows) => {
         if (err) {
-            console.error(err);
-            res.status(500).send("Database error.");
-        } else if (!row) {
-            res.status(404).send("Conversation not found.");
+            console.log(err);
+            res.send("There was an error fetching messages:\n" + err);
         } else {
-            res.render("chat", { user: req.session.user, convo: row });
+            res.render("chat", { user: req.session.user, messages: rows });
         }
     });
 });
