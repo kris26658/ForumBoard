@@ -67,6 +67,10 @@
         const localUser = "<%= user %>"
         const socket = new WebSocket("ws://localhost:4000");
 
+        function displayOldPosts() {
+
+        }
+
         function sendMessage() {
             const messageInput = document.getElementById("messageInput");
             const messageText = messageInput.value.trim();
@@ -74,17 +78,15 @@
             if (messageText) {
                 const message = { text: messageText, user: localUser };
                 socket.send(JSON.stringify(message));
-                messageInput.value = ""; // Clear input after sending
+                messageInput.value = ""; //clear input after sending
             };
         };
 
         socket.onmessage = (event) => {
             try {
-                const message = JSON.parse(event.data);
-
                 if (message.list) {
                     const users = document.getElementById("users");
-                    users.innerHTML = ""; // Clear the user list
+                    users.innerHTML = ""; //clear the user list
                     message.list.forEach((user) => {
                         const li = document.createElement("li");
                         li.textContent = user;
@@ -97,12 +99,26 @@
                     const p = document.createElement("p");
                     p.textContent = `${message.user}: ${message.text}`;
                     messages.appendChild(p);
-                    messages.scrollTop = messages.scrollHeight; // Scroll to the latest message
+                    messages.scrollTop = messages.scrollHeight; //scroll to the latest message
                 }
             } catch (error) {
                 console.error("Error parsing message:", error);
             }
-        };
+                // Store the message in the database
+                db.run(
+                    "INSERT INTO posts (convo_id, user, text) VALUES (?, ?, ?)",
+                    [message.convo_id, message.user, message.text],
+                    function (err) {
+                        if (err) {
+                            console.error("Error saving message to database:", err);
+                            return;
+                        }
+
+                        // Broadcast the message to all connected users
+                        socket.broadcast.emit('message', { user: message.user, text: message.text });
+                    }
+            };
+        });
     </script>
 
     <div class="user-list">

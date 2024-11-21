@@ -221,9 +221,6 @@ app.post("/convoList", isAuthenticated, (req, res) => {
 //handle chat
 app.get("/chat", isAuthenticated, (req, res) => {
     const convoTitle = req.query.title;
-    if (!convoTitle) {
-        return res.status(400).send("Conversation title is required.");
-    }
 
     db.get("SELECT * FROM convos WHERE title = ?;", [convoTitle], (err, row) => {
         if (err) {
@@ -233,6 +230,32 @@ app.get("/chat", isAuthenticated, (req, res) => {
             res.status(404).send("Conversation not found.");
         } else {
             res.render("chat", { user: req.session.user, convo: row });
+        }
+    });
+});
+
+app.get("/chat/:convo_id", isAuthenticated, (req, res) => {
+    const user = req.user; // assuming user is stored in session or another method
+    const convo_id = req.params.convo_id;
+    
+    db.get("SELECT * FROM posts JOIN convo ON posts.convo_id =? JOIN convo.uid WHERE convo.uid = ?;")[poster, content], (err, row) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send("Database error.");
+        } else if (!row) {
+            res.status(404).send("Conversation not found.");
+        } else {
+            res.render("chat", { posts: poster, content });
+        };
+    };
+
+    db.all("SELECT * FROM posts;", [], (err, rows) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send("Database error.");
+        } else {
+            //pass conversations to convoList.js
+            res.render("chat", { posts: rows });
         }
     });
 });
