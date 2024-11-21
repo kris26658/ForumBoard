@@ -62,18 +62,49 @@
 </head>
 
 <body>
+
     <script>
         const localUser = "<%= user %>"
+        const socket = new WebSocket("ws://localhost:4000");
+
         function sendMessage() {
             const messageInput = document.getElementById("messageInput");
             const messageText = messageInput.value.trim();
+
             if (messageText) {
                 const message = { text: messageText, user: localUser };
-                db.send(JSON.stringify(message));
+                socket.send(JSON.stringify(message));
                 messageInput.value = ""; // Clear input after sending
             };
         };
+
+        socket.onmessage = (event) => {
+            try {
+                const message = JSON.parse(event.data);
+
+                if (message.list) {
+                    const users = document.getElementById("users");
+                    users.innerHTML = ""; // Clear the user list
+                    message.list.forEach((user) => {
+                        const li = document.createElement("li");
+                        li.textContent = user;
+                        users.appendChild(li);
+                    });
+                }
+
+                if (message.text) {
+                    const messages = document.getElementById("sentMessages");
+                    const p = document.createElement("p");
+                    p.textContent = `${message.user}: ${message.text}`;
+                    messages.appendChild(p);
+                    messages.scrollTop = messages.scrollHeight; // Scroll to the latest message
+                }
+            } catch (error) {
+                console.error("Error parsing message:", error);
+            }
+        };
     </script>
+
     <div class="user-list">
         <h3>Online Users:</h3>
         <ul id="users"></ul>
@@ -89,10 +120,14 @@
     <div class="messages">
         <% messages.forEach(function(message) { %>
             <div class="message">
-                <strong><%= message.user %>:</strong> <%= message.text %>
+                <strong>
+                    <%= message.user %>:
+                </strong>
+                <%= message.text %>
             </div>
-        <% }); %>
+            <% }); %>
     </div>
+
 </body>
 
 </html>
