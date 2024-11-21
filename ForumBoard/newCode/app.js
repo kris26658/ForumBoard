@@ -35,7 +35,7 @@ const db = new sqlite3.Database("data/database.db", (err) => {
 
 function isAuthenticated(req, res, next) {
     if (req.session.user) next()
-    else res.redirect("/login")
+    else res.redirect("/")
 };
 
 function userList(app) {
