@@ -33,9 +33,11 @@ const db = new sqlite3.Database("data/database.db", (err) => {
     };
 });
 
+
+
 function isAuthenticated(req, res, next) {
     if (req.session.user) next()
-    else res.redirect("/login")
+    else res.redirect("/")
 };
 
 function userList(app) {
@@ -137,7 +139,11 @@ app.post("/", (req, res) => {
 
                         if (row.password === hashedPassword) {
                             req.session.user = req.body.user;
+<<<<<<< Updated upstream
                             res.render("convoList");
+=======
+                            res.redirect("/chat"); 
+>>>>>>> Stashed changes
                         } else {
                             res.send("Incorrect Password.")
                         };
@@ -191,5 +197,12 @@ app.post("/convoList", (req, res) => {
 
 //handle chat
 app.get("/chat", isAuthenticated, (req, res) => {
-    res.render("chat", { user: req.session.user })
+    db.all("SELECT * FROM posts WHERE poster = ?", [req.session.user], (err, rows) => {
+        if (err) {
+            console.log(err);
+            res.send("There was an error fetching messages:\n" + err);
+        } else {
+            res.render("chat", { user: req.session.user, messages: rows });
+        }
+    });
 });
