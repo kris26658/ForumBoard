@@ -100,7 +100,6 @@ app.get("/", (req, res) => {
     res.render("index");
 });
 
-//handle login
 app.post("/", (req, res) => {
     if (req.body.user && req.body.pass) {
         //users table
@@ -149,18 +148,48 @@ app.post("/", (req, res) => {
     } else {
         res.send("Please enter both a username and password");
     };
-    //posts table
+});
 
-    //convos table
+//posts table
 
+//handle convoList
+app.get("/convoList", isAuthenticated, (req, res) => {
+    db.all("SELECT * FROM convos;", [], (err, rows) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send("Database error.");
+        } else {
+            res.render("convoList", { convos: rows });
+        }
+    });
+});
+
+app.post("/convoList", (req, res) => {
+    const convoTitle = req.body.convoTitle;
+    if (!convoTitle) {
+        return res.status(400).send("Conversation title is required.");
+    }
+
+    db.get("SELECT * FROM convos WHERE title=?;", [convoTitle], (err, row) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send("Database error.");
+        } else if (row) {
+            res.status(400).send("A conversation with this title already exists.");
+        } else {
+            db.run("INSERT INTO convos (title) VALUES (?);", [convoTitle], (err) => {
+                if (err) {
+                    console.error(err);
+                    res.status(500).send("Error creating conversation.");
+                } else {
+                    res.redirect("/convoList");
+                };
+            });
+        };
+    });
 });
 
 //handle chat
 app.get("/chat", isAuthenticated, (req, res) => {
     res.render("chat", { user: req.session.user })
-});
-
-//handle convoList
-app.get("/convoList", isAuthenticated, (req, res) => {
-    res.render("convoList")
 });
