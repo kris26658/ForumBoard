@@ -33,11 +33,9 @@ const db = new sqlite3.Database("data/database.db", (err) => {
     };
 });
 
-
-
 function isAuthenticated(req, res, next) {
     if (req.session.user) next()
-    else res.redirect("/")
+    else res.redirect("/login")
 };
 
 function userList(app) {
@@ -102,7 +100,6 @@ app.get("/", (req, res) => {
     res.render("index");
 });
 
-//handle login
 app.post("/", (req, res) => {
     if (req.body.user && req.body.pass) {
         //users table
@@ -140,7 +137,7 @@ app.post("/", (req, res) => {
 
                         if (row.password === hashedPassword) {
                             req.session.user = req.body.user;
-                            res.redirect("/chat"); 
+                            res.render("convoList");
                         } else {
                             res.send("Incorrect Password.")
                         };
@@ -151,9 +148,9 @@ app.post("/", (req, res) => {
     } else {
         res.send("Please enter both a username and password");
     };
-    //posts table
+});
 
-    //convos table
+//posts table
 
 //handle convoList
 app.get("/convoList", isAuthenticated, (req, res) => {
