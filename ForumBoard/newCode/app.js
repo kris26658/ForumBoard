@@ -1,8 +1,8 @@
-//to install required modules, in terminal: "npm i sqlite3 express ejs crypto jsonwebtoken express-session"
+//to install required modules, in terminal: "npm i http ws express ejs sqlite3 crypto jsonwebtoken express-session"
 
-const sqlite3 = require("sqlite3"); //import sqlite3
 const express = require("express"); //import express
 const ejs = require("ejs"); //import ejs
+const sqlite3 = require("sqlite3"); //import sqlite3
 const crypto = require("crypto"); //import crypto
 const jwt = require('jsonwebtoken'); //import jsonwebtoken
 const session = require('express-session'); //import express-session
@@ -13,32 +13,36 @@ app.set("view engine", "ejs"); // set view engine
 app.use(express.urlencoded({ extended: true })); //encode url
 
 //allows calling of files in public folder
-app.use(express.static('public'))
+app.use(express.static("public"))
 
+const sessionSecret = process.env.SESSION_SECRET || "defaultSecret";
 app.use(session({
-    secret: "Secret hehe",
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false
 }));
-
-const PORT = 3000 //set port number
-
-const db = new sqlite3.Database("data/database.db", (err) => {
-    if (err) {
-        console.log(err);
-    } else {
-        app.listen(PORT, () => {
-            console.log("Server started on port", PORT)
-        })
-    };
-});
 
 function isAuthenticated(req, res, next) {
     if (req.session.user) next()
     else res.redirect("/login")
 };
 
-function userList(app) {
+/*---------
+HTTP Server
+---------*/
+
+const http = require('http').Server(app); //import http, create http server and associate it with express
+
+const PORT = process.env.PORT || 3000; //change port number from default
+
+/*--------------
+WebSocket Server
+--------------*/
+
+const WebSocket = require("ws"); //import WebSocket
+const wss = new WebSocket.Server({ server: http }); //create new WebSocket server, attach it to http server
+
+function userList(wss) {
     let users = [];
     app.clients.forEach(client => {
         if (client.user) {
@@ -48,24 +52,33 @@ function userList(app) {
     return { list: users };
 };
 
-app.on("connection", (app => { //on connection to server
-    app.on("close", () => console.log(`${app.user} has disconnected.`)); //user disconnects
-    broadcast(app, userList(app)); //reload user list
+function broadcast(wss, data) {
+    const message = JSON.stringify(data);
+    wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(message);
+        };
+    });
+};
 
-    app.on("message", (data) => {
+wss.on("connection", (client => { //on connection to server
+    client.on("close", () => console.log(`${client.user} has disconnected.`)); //user disconnects
+    broadcast(wss, userList(wss)); //reload user list
+
+    client.on("message", (data) => {
         const parsedMsg = JSON.parse(data); //parse incoming message
 
         if (parsedMsg.user) {
-            app.user = parsedMsg.user;
-            broadcast(app, userList(app));
+            client.user = parsedMsg.user;
+            broadcast(wss, userList(wss));
         };
         if (parsedMsg.text) {
-            broadcast(app, { user: app.user, text: parsedMsg.text });
+            broadcast(wss, { user: client.user, text: parsedMsg.text });
         };
     });
 }));
 
-app.message = (event) => {
+wss.message = (event) => {
     try {
         const message = JSON.parse(event.data);
 
@@ -90,6 +103,23 @@ app.message = (event) => {
         console.error("Error parsing message:", error);
     }
 };
+
+/*-------------
+Create Database
+-------------*/
+
+const db = new sqlite3.Database("data/database.db", (err) => {
+    if (err) {
+        console.log("Error opening database:", err);
+        return; //exit if database can't be opened
+    } else {
+        console.log("Database connected successfully.");
+        //start the server after the database is connected
+        http.listen(PORT, () => {
+            console.log(`Server started on port ${PORT}`);
+        });
+    }
+});
 
 /*---------------
 GET/POST Requests
@@ -137,7 +167,7 @@ app.post("/", (req, res) => {
 
                         if (row.password === hashedPassword) {
                             req.session.user = req.body.user;
-                            res.render("convoList");
+                            res.redirect("/convoList")
                         } else {
                             res.send("Incorrect Password.")
                         };
@@ -149,8 +179,6 @@ app.post("/", (req, res) => {
         res.send("Please enter both a username and password");
     };
 });
-
-//posts table
 
 //handle convoList
 app.get("/convoList", isAuthenticated, (req, res) => {

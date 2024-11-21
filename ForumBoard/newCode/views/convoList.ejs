@@ -10,15 +10,19 @@
 <body>
     <div class="oldConvo">
         <p>Choose from an existing conversation...</p>
-        <form action="/chat" method="get">
-            <% convos.forEach(convo=> { %>
-                <button id="convoButton" class="convoTitle" type="submit" name="title" value="<%= convo.title %>">
-                    <%= convo.title %>
-                </button>
-            <% }); %>
-        </form>
+        <% if (convos.length > 0) { %>
+            <form action="/chat" method="get">
+                <% convos.forEach(convo => { %>
+                    <button id="convoButton" class="convoTitle" type="submit" name="title" value="<%= convo.title %>">
+                        <%= convo.title %>
+                    </button>
+                <% }); %>
+            </form>
+        <% } else { %>
+            <p>No active conversations.</p>
+        <% } %>
     </div>
-
+    
     <div class="newConvo">
         <p>...or create a new one!</p>
         <form action="/convoList" method="post">
