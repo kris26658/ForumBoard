@@ -159,12 +159,13 @@ app.get("/convoList", isAuthenticated, (req, res) => {
             console.error(err);
             res.status(500).send("Database error.");
         } else {
+            //pass conversations to convoList.js
             res.render("convoList", { convos: rows });
         }
     });
 });
 
-app.post("/convoList", (req, res) => {
+app.post("/convoList", isAuthenticated, (req, res) => {
     const convoTitle = req.body.convoTitle;
     if (!convoTitle) {
         return res.status(400).send("Conversation title is required.");
@@ -191,5 +192,19 @@ app.post("/convoList", (req, res) => {
 
 //handle chat
 app.get("/chat", isAuthenticated, (req, res) => {
-    res.render("chat", { user: req.session.user })
+    const convoTitle = req.query.title;
+    if (!convoTitle) {
+        return res.status(400).send("Conversation title is required.");
+    }
+
+    db.get("SELECT * FROM convos WHERE title = ?;", [convoTitle], (err, row) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send("Database error.");
+        } else if (!row) {
+            res.status(404).send("Conversation not found.");
+        } else {
+            res.render("chat", { user: req.session.user, convo: row });
+        }
+    });
 });
