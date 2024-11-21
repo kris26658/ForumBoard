@@ -139,11 +139,7 @@ app.post("/", (req, res) => {
 
                         if (row.password === hashedPassword) {
                             req.session.user = req.body.user;
-<<<<<<< Updated upstream
-                            res.render("convoList");
-=======
                             res.redirect("/chat"); 
->>>>>>> Stashed changes
                         } else {
                             res.send("Incorrect Password.")
                         };
