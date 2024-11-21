@@ -85,14 +85,6 @@
         <input id="sendButton" type="submit" value="Send" onclick="sendMessage()">
         <div id="sentMessages"></div>
     </div>
-
-    <div class="messages">
-        <% messages.forEach(function(message) { %>
-            <div class="message">
-                <strong><%= message.user %>:</strong> <%= message.text %>
-            </div>
-        <% }); %>
-    </div>
 </body>
 
 </html>
