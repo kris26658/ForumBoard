@@ -65,7 +65,11 @@
 
     <script>
         const localUser = "<%= user %>"
-        const socket = new WebSocket("ws://localhost:4000");
+        const socket = new WebSocket("ws://localhost:3000");
+
+        socket.onopen = () => {
+            ws.send(JSON.stringify({ name: localName }));
+        };
 
         function displayOldPosts() {
 
@@ -104,21 +108,16 @@
             } catch (error) {
                 console.error("Error parsing message:", error);
             }
-                // Store the message in the database
-                db.run(
-                    "INSERT INTO posts (convo_id, user, text) VALUES (?, ?, ?)",
-                    [message.convo_id, message.user, message.text],
-                    function (err) {
-                        if (err) {
-                            console.error("Error saving message to database:", err);
-                            return;
-                        }
-
-                        // Broadcast the message to all connected users
-                        socket.broadcast.emit('message', { user: message.user, text: message.text });
-                    }
-            };
-        });
+            // Store the message in the database
+            db.run("INSERT INTO posts (convo_id, user, text) VALUES (?, ?, ?)", [message.convo_id, message.user, message.text], function (err) {
+                if (err) {
+                    console.error("Error saving message to database:", err);
+                    return;
+                };
+                //broadcast the message to all connected users
+                socket.broadcast.emit('message', { user: message.user, text: message.text });
+            });
+        };
     </script>
 
     <div class="user-list">
@@ -131,20 +130,20 @@
         <input type="text" id="messageInput" placeholder="Type a message" size="70">
         <input id="sendButton" type="submit" value="Send" onclick="sendMessage()">
         <div id="sentMessages"></div>
-    <div class="messages">
-        <% if (typeof messages !== 'undefined' && messages.length > 0) { %>
-            <% messages.forEach(function(message) { %>
-                <div class="message">
-                    <strong>
-                        <%= message.user %>:
-                    </strong>
-                    <%= message.text %>
-                </div>
-            <% }); %>
-        <% } else { %>
-            <p>No messages yet.</p>
-        <% } %>
-    </div>
+        <div class="messages">
+            <% if (typeof messages !=='undefined' && messages.length> 0) { %>
+                <% messages.forEach(function(message) { %>
+                    <div class="message">
+                        <strong>
+                            <%= message.user %>:
+                        </strong>
+                        <%= message.text %>
+                    </div>
+                    <% }); %>
+                        <% } else { %>
+                            <p>No messages yet.</p>
+                            <% } %>
+        </div>
 
 </body>
 
