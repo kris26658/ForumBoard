@@ -131,17 +131,19 @@
         <input type="text" id="messageInput" placeholder="Type a message" size="70">
         <input id="sendButton" type="submit" value="Send" onclick="sendMessage()">
         <div id="sentMessages"></div>
-    </div>
-
     <div class="messages">
-        <% messages.forEach(function(message) { %>
-            <div class="message">
-                <strong>
-                    <%= message.user %>:
-                </strong>
-                <%= message.text %>
-            </div>
+        <% if (typeof messages !== 'undefined' && messages.length > 0) { %>
+            <% messages.forEach(function(message) { %>
+                <div class="message">
+                    <strong>
+                        <%= message.user %>:
+                    </strong>
+                    <%= message.text %>
+                </div>
             <% }); %>
+        <% } else { %>
+            <p>No messages yet.</p>
+        <% } %>
     </div>
 
 </body>
