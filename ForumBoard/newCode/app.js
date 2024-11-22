@@ -77,32 +77,6 @@ wss.on("connection", (client => { //on connection to server
     });
 }));
 
-wss.on("message", (message) => {
-    try {
-        const message = JSON.parse(message.data);
-
-        if (message.list) {
-            const users = document.getElementById("users");
-            users.innerHTML = ""; // Clear before updating
-            message.list.forEach(user => {
-                const li = document.createElement('li');
-                li.textContent = user;
-                users.appendChild(li);
-            });
-        }
-        
-        if (message.text) {
-            const messages = document.getElementById("sentMessages");
-            const p = document.createElement("p");
-            p.textContent = `${message.user}: ${message.text}`;
-            messages.appendChild(p);
-            messages.scrollTop = messages.scrollHeight; //scroll to latest message
-        }
-    } catch (error) {
-        console.error("Error parsing message:", error);
-    };
-});
-
 /*-------------
 Create Database
 -------------*/
@@ -233,31 +207,37 @@ app.get("/chat", isAuthenticated, (req, res) => {
     });
 });
 
-app.get("/chat/:convo_id", (req, res) => {
-    const user = req.user; // assuming user is stored in session or another method
+app.get("/chat/:convo_id", isAuthenticated, (req, res) => {
+    const user = req.user;
     const convo_id = req.params.convo_id;
 
+    if (!user) {
+        return res.status(401).send("Unauthorized access.");
+    }
+
     // SQL Query to fetch posts and user details from the conversation
-    db.get("SELECT posts.text AS content, posts.user AS poster FROM posts JOIN convo ON posts.convo_id = convo.id WHERE convo.uid = ? AND posts.convo_id = ?;", [user.id, convo_id], (err, rows) => {
+    db.all("SELECT posts.text AS content, posts.user AS poster FROM posts JOIN convo ON posts.convo_id = convo.id WHERE convo.uid = ? AND posts.convo_id = ?;", [convo.uid, convo_id], (err, rows) => {
         if (err) {
             console.error(err);
             return res.status(500).send("Database error.");
-        }
-        if (!rows) {
+        };
+
+        if (!rows || rows.length === 0) {
             return res.status(404).send("Conversation not found.");
-        }
-
-        //store the message in the database
-        db.run("INSERT INTO posts (convo_id, user, text) VALUES (?, ?, ?)", [message.convo_id, message.user, message.text], function (err) {
-            if (err) {
-                console.error("Error saving message to database:", err);
-                return;
-            };
-            //broadcast the message to all connected users
-            socket.broadcast.emit('message', { user: message.user, text: message.text });
-        });
-
+        };
         // Render the page, passing posts data
         res.render("chat", { user: user.username, messages: rows });
+    }
+    );
+});
+app.post("/chat/:convo_id", isAuthenticated, (req, res) => {
+    //store the message in the database
+    db.run("INSERT INTO posts (convo_id, user, text) VALUES (?, ?, ?)", [message.convo_id, message.user, message.text], function (err) {
+        if (err) {
+            console.error("Error saving message to database:", err);
+            return;
+        };
+        //broadcast the message to all connected users
+        socket.broadcast.emit('message', { user: message.user, text: message.text });
     });
 });

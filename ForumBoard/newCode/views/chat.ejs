@@ -21,15 +21,6 @@
             background-color: #cacaca;
         }
 
-        #sentMessages {
-            height: 750px;
-            padding: 10px;
-            margin-top: 5px;
-            background-color: white;
-            border: 1px solid #ccc;
-            overflow-y: auto;
-        }
-
         input[type="text"] {
             width: calc(100% - 100px);
             padding: 10px;
@@ -60,63 +51,7 @@
         const localUser = "<%= user %>"
         const socket = new WebSocket("ws://localhost:3000");
 
-        window.onload = () => {
-            displayOldPosts();
-        };
-        
-        function displayOldPosts() {
-            const messages = "<%= JSON.stringify(messages) %>;" // Pass messages as JSON
-            const messageContainer = document.getElementById("sentMessages");
 
-            if (messages && messages.length > 0) {
-                messages.forEach((msg) => {
-                    const p = document.createElement("p");
-                    p.textContent = `${msg.user}: ${msg.text}`;
-                    messageContainer.appendChild(p);
-                });
-                messageContainer.scrollTop = messageContainer.scrollHeight; // Scroll to latest
-            };
-
-        };
-
-        function sendMessage() {
-            const messageInput = document.getElementById("messageInput");
-            const messageText = messageInput.value.trim();
-
-            if (messageText) {
-                const message = { text: messageText, user: localUser };
-                socket.send(JSON.stringify(message));
-                messageInput.value = ""; //clear input after sending
-            };
-        };
-
-        socket.onopen = () => {
-            socket.send(JSON.stringify({ name: localUser }));
-        };
-
-        socket.onmessage = (event) => {
-            try {
-                if (message.list) {
-                    const users = document.getElementById("users");
-                    users.innerHTML = ""; //clear the user list
-                    message.list.forEach((user) => {
-                        const li = document.createElement("li");
-                        li.textContent = user;
-                        users.appendChild(li);
-                    });
-                }
-
-                if (message.text) {
-                    const messages = document.getElementById("sentMessages");
-                    const p = document.createElement("p");
-                    p.textContent = `${message.user}: ${message.text}`;
-                    messages.appendChild(p);
-                    messages.scrollTop = messages.scrollHeight; //scroll to the latest message
-                }
-            } catch (error) {
-                console.error("Error parsing message:", error);
-            }
-        };
     </script>
 
     <div class="user-list">
@@ -126,21 +61,20 @@
 
     <div class="chat-box">
         <h4>Welcome to the chat, <%= user %>!</h4>
-        <input type="text" id="messageInput" placeholder="Type a message" size="70">
-        <input id="sendButton" type="submit" value="Send" onclick="sendMessage()">
-        <div id="sentMessages"></div>
-        <div class="messages">
-            <% if (typeof messages !=='undefined' && messages.length> 0) { %>
-                <% messages.forEach(function(message) { %>
-                    <div class="message">
+        <input type="text" id="postInput" placeholder="Type a new post" size="70">
+        <input id="sendButton" type="submit" value="Send" onclick="sendpost()">
+        <div class="posts">
+            <% if (typeof posts !=='undefined' && posts.length> 0) { %>
+                <% posts.forEach(function(post) { %>
+                    <div class="post">
                         <strong>
-                            <%= message.user %>:
+                            <%= post.user %>:
                         </strong>
-                        <%= message.text %>
+                        <%= post.text %>
                     </div>
                     <% }); %>
                         <% } else { %>
-                            <p>No messages yet.</p>
+                            <p>No posts yet.</p>
                             <% } %>
         </div>
 
