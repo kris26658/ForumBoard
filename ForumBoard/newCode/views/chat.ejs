@@ -21,13 +21,6 @@
             background-color: #cacaca;
         }
 
-        .chat-box {
-            width: calc(100% - 370px);
-            padding: 10px;
-            background-color: #cacaca;
-            overflow: hidden;
-        }
-
         #sentMessages {
             height: 750px;
             padding: 10px;
@@ -67,13 +60,24 @@
         const localUser = "<%= user %>"
         const socket = new WebSocket("ws://localhost:3000");
 
-        socket.onopen = () => {
-            socket.send(JSON.stringify({ name: localUser }));
+        window.onload = () => {
+            displayOldPosts();
         };
-
+        
         function displayOldPosts() {
+            const messages = "<%= JSON.stringify(messages) %>;" // Pass messages as JSON
+            const messageContainer = document.getElementById("sentMessages");
 
-        }
+            if (messages && messages.length > 0) {
+                messages.forEach((msg) => {
+                    const p = document.createElement("p");
+                    p.textContent = `${msg.user}: ${msg.text}`;
+                    messageContainer.appendChild(p);
+                });
+                messageContainer.scrollTop = messageContainer.scrollHeight; // Scroll to latest
+            };
+
+        };
 
         function sendMessage() {
             const messageInput = document.getElementById("messageInput");
@@ -84,6 +88,10 @@
                 socket.send(JSON.stringify(message));
                 messageInput.value = ""; //clear input after sending
             };
+        };
+
+        socket.onopen = () => {
+            socket.send(JSON.stringify({ name: localUser }));
         };
 
         socket.onmessage = (event) => {

@@ -1,10 +1,9 @@
-//to install required modules, in terminal: "npm i http ws express ejs sqlite3 crypto jsonwebtoken express-session"
+//to install required modules, in terminal: "npm i http ws express ejs sqlite3 crypto express-session"
 
 const express = require("express"); //import express
 const ejs = require("ejs"); //import ejs
 const sqlite3 = require("sqlite3"); //import sqlite3
 const crypto = require("crypto"); //import crypto
-const jwt = require('jsonwebtoken'); //import jsonwebtoken
 const session = require('express-session'); //import express-session
 
 const app = express(); //initialize express with app
@@ -91,17 +90,7 @@ wss.on("message", (message) => {
                 users.appendChild(li);
             });
         }
-        //store message in posts table
-        db.run("INSERT INTO posts (convo_id, user, text) VALUES (?, ?, ?)", [message.convo_id, message.user, message.text], function (err) {
-            if (err) {
-                console.error("Error saving message to database:", err);
-                return;
-            }
-
-            //broadcast the message to all connected users
-            socket.broadcast.emit('message', { user: message.user, text: message.text });
-        });
-
+        
         if (message.text) {
             const messages = document.getElementById("sentMessages");
             const p = document.createElement("p");
