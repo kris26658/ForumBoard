@@ -71,32 +71,6 @@
             ws.send(JSON.stringify({ name: localName }));
         };
 
-        ws.onmessage = (event) => {
-            try {
-                const message = JSON.parse(event.data);
-
-                if (message.list) {
-                    const users = document.getElementById("users");
-                    users.innerHTML = ""; // Clear before updating
-                    message.list.forEach(name => {
-                        const li = document.createElement('li');
-                        li.textContent = name;
-                        users.appendChild(li);
-                    });
-                }
-
-                if (message.text) {
-                    const messages = document.getElementById("sentMessages");
-                    const p = document.createElement("p");
-                    p.textContent = `${message.user}: ${message.text}`;
-                    messages.appendChild(p);
-                    messages.scrollTop = messages.scrollHeight; // Scroll to latest message
-                }
-            } catch (error) {
-                console.error("Error parsing message:", error);
-            }
-        };
-
         ws.onerror = (error) => {
             console.error("WebSocket error:", error);
         };

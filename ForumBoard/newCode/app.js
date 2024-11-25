@@ -61,18 +61,29 @@ function broadcast(wss, data) {
 };
 
 wss.on("connection", (client => { //on connection to server
-    client.on("close", () => console.log(`${client.user} has disconnected.`)); //user disconnects
-    broadcast(wss, userList(wss)); //reload user list
+    client.on("close", () => {
+        console.log(`${client.user} has disconnected.`); //user disconnects
+        broadcast(wss, userList(wss)); //broadcast updated userList
+    });
 
     client.on("message", (data) => {
         const parsedMsg = JSON.parse(data); //parse incoming message
 
         if (parsedMsg.user) {
             client.user = parsedMsg.user;
-            broadcast(wss, userList(wss));
+            broadcast(wss, userList(wss)); //broadcast updated userList
         };
-        if (parsedMsg.text) {
-            broadcast(wss, { user: client.user, text: parsedMsg.text });
+        if (parsedMsg.convo_id && parsedMsg.text) {
+            // Save the message to the database
+            db.run("INSERT INTO posts (convo_id, user, text, timestamp) VALUES (?, ?, ?, datetime('now'))", [parsedMsg.convo_id, parsedMsg.user, parsedMsg.text], (err) => {
+                if (err) {
+                    console.error("Error saving message to database:", err);
+                    return;
+                };
+
+                //broadcast the message to all connected clients
+                broadcast(wss, { convo_id: parsedMsg.convo_id, user: parsedMsg.user, text: parsedMsg.text });
+            });
         };
     });
 }));
@@ -195,28 +206,23 @@ app.post("/convoList", isAuthenticated, (req, res) => {
 app.get("/chat", isAuthenticated, (req, res) => {
     const convoTitle = req.query.title;
 
-    db.get("SELECT * FROM convos WHERE title = ?;", [convoTitle], (err, row) => {
+    db.get("SELECT * FROM convos WHERE title=?;", [convoTitle], (err, row) => {
         if (err) {
             console.error(err);
             res.status(500).send("Database error.");
         } else if (!row) {
             res.status(404).send("Conversation not found.");
         } else {
-            res.render("chat", { user: req.session.user, convo: row });
+            res.render("chat", { user: req.session.user, posts: row });
         }
     });
 });
 
 app.get("/chat/:convo_id", isAuthenticated, (req, res) => {
-    const user = req.user;
-    const convo_id = req.params.convo_id;
-
-    if (!user) {
-        return res.status(401).send("Unauthorized access.");
-    }
+    const convoID = req.params.convo_id;
 
     // SQL Query to fetch posts and user details from the conversation
-    db.all("SELECT posts.text AS content, posts.user AS poster FROM posts JOIN convo ON posts.convo_id = convo.id WHERE convo.uid = ? AND posts.convo_id = ?;", [convo.uid, convo_id], (err, rows) => {
+    db.all("SELECT poster, content, time FROM posts WHERE convo_id=? ORDER BY time", [convoID], (err, rows) => {
         if (err) {
             console.error(err);
             return res.status(500).send("Database error.");
@@ -225,19 +231,28 @@ app.get("/chat/:convo_id", isAuthenticated, (req, res) => {
         if (!rows || rows.length === 0) {
             return res.status(404).send("Conversation not found.");
         };
-        // Render the page, passing posts data
-        res.render("chat", { user: user.username, messages: rows });
-    }
-    );
+
+        //render the page, passing posts data
+        res.render("chat", { convo_id: convoID, user: req.session.user, posts: rows });
+    });
 });
+
 app.post("/chat/:convo_id", isAuthenticated, (req, res) => {
-    //store the message in the database
-    db.run("INSERT INTO posts (convo_id, user, text) VALUES (?, ?, ?)", [message.convo_id, message.user, message.text], function (err) {
+    const convoID = req.params.convo_id;
+    const { content } = req.body;
+
+    if (!content) {
+        return res.status(400).send("Post content is required.");
+    }
+    //store the post in the database
+    db.run("INSERT INTO posts (convo_id, poster, content) VALUES (?, ?, ?)", [convoID, req.session.user, content], (err, rows) => {
         if (err) {
-            console.error("Error saving message to database:", err);
+            console.error("Error saving post to database:", err);
             return;
         };
         //broadcast the message to all connected users
-        socket.broadcast.emit('message', { user: message.user, text: message.text });
+        broadcast(wss, { convo_id: convoID, user: req.session.user, posts: content });
+
+        res.redirect(`/chat/${convoID}`)
     });
 });

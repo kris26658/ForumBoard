@@ -49,9 +49,48 @@
 
     <script>
         const localUser = "<%= user %>"
-        const socket = new WebSocket("ws://localhost:3000");
+        const ws = new WebSocket("ws://localhost:3000");
 
+        ws.onopen = () => {
+            ws.send(JSON.stringify({ name: localUser }));
+        };
 
+        ws.onmessage = (event) => {
+            console.log("Message received:", event.data);
+            const data = JSON.parse(event.data);
+            if (data.type === "userList") {
+                const userList = document.getElementById("users");
+                userList.innerHTML = "";
+                data.users.forEach((user) => {
+                    const li = document.createElement("li");
+                    li.textContent = user;
+                    userList.appendChild(li);
+                });
+            } else if (data.type === "newPost") {
+                const postsDiv = document.querySelector(".postBox");
+                const newPost = document.createElement("div");
+                newPost.classList.add("post");
+                newPost.innerHTML = `<strong>${data.user}:</strong> ${data.text} <small>${new Date(data.timestamp).toLocaleString()}</small>`;
+                postsDiv.appendChild(newPost);
+            };
+        };
+        ws.onerror = (error) => {
+            console.error("WebSocket Error:", error);
+        };
+
+        ws.onclose = () => {
+            console.warn("WebSocket connection closed.");
+            alert("Connection lost. Please refresh the page.");
+        };
+
+        document.getElementById("chatForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const postInput = document.getElementById("postInput");
+            if (postInput.value.trim()) {
+                ws.send(JSON.stringify({ type: "newPost", text: postInput.value }));
+                postInput.value = "";
+            }
+        });
     </script>
 
     <div class="user-list">
@@ -61,18 +100,22 @@
 
     <div class="chat-box">
         <h4>Welcome to the chat, <%= user %>!</h4>
-        <input type="text" id="postInput" placeholder="Type a new post" size="70">
-        <input id="sendButton" type="submit" value="Send" onclick="sendpost()">
-        <div class="posts">
-            <% if (typeof posts !=='undefined' && posts.length> 0) { %>
-                <% posts.forEach(function(post) { %>
-                    <div class="post">
+        <form id="chatForm" action="/chat/<% convo_id %>" method="post">
+            <input type="text" name="content" id="postInput" placeholder="Type a new post" required>
+            <button type="submit">Send</button>
+        </form>
+        <div class="postBox" action="/chat:convo_id" method="get">
+            <% if (posts.length> 0) { %>
+                <% posts.forEach((post)=> { %>
+                    <div class="postsDiv">
                         <strong>
                             <%= post.user %>:
                         </strong>
-                        <%= post.text %>
+                        <%= post.text %> <small>
+                                <%= new Date(post.time).toLocaleString() %>
+                            </small>
                     </div>
-                    <% }); %>
+                    <% }) %>
                         <% } else { %>
                             <p>No posts yet.</p>
                             <% } %>
