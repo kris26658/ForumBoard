@@ -237,7 +237,12 @@ app.post("/chat/:convo_id", isAuthenticated, (req, res) => {
             //render the page, passing posts data
             res.render("chat", { convo_id: convoID, posts: rows });
             console.log(rows);
-            
+
         });
     });
+});
+
+//handle userPage
+app.get("userPage:uid", isAuthenticated, (req, res) => {
+    
 });
