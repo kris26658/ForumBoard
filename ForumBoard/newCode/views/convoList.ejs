@@ -11,11 +11,9 @@
     <div class="oldConvo">
         <p>Choose from an existing conversation...</p>
         <% if (convos.length > 0) { %>
-
                 <% convos.forEach(convo => { %>
                     <a href="/chat/<%= convo.uid %>" id="convoButton" class="convoTitle"><%= convo.title %></a>
                 <% }); %>
-            </form>
         <% } else { %>
             <p>No active conversations.</p>
         <% } %>
