@@ -171,7 +171,7 @@ app.get("/convoList", isAuthenticated, (req, res) => {
             console.error(err);
             res.status(500).send("Database error.");
         } else {
-            //pass conversations to convoList.js
+            //pass conversations to convoList.js       
             res.render("convoList", { convos: rows });
         }
     });
@@ -206,14 +206,14 @@ app.post("/convoList", isAuthenticated, (req, res) => {
 app.get("/chat", isAuthenticated, (req, res) => {
     const convoTitle = req.query.title;
 
-    db.get("SELECT * FROM convos WHERE title=?;", [convoTitle], (err, row) => {
+    db.get("SELECT * FROM convos WHERE uid=?;", [convoTitle], (err, rows) => {
         if (err) {
             console.error(err);
             res.status(500).send("Database error.");
-        } else if (!row) {
+        } else if (!rows) {
             res.status(404).send("Conversation not found.");
         } else {
-            res.render("chat", { user: req.session.user, posts: row });
+            res.render("chat", { user: req.session.user, posts: rows });
         }
     });
 });
@@ -222,7 +222,7 @@ app.get("/chat/:convo_id", isAuthenticated, (req, res) => {
     const convoID = req.params.convo_id;
 
     // SQL Query to fetch posts and user details from the conversation
-    db.all("SELECT poster, content, time FROM posts WHERE convo_id=? ORDER BY time", [convoID], (err, rows) => {
+    db.all("SELECT posts.poster, posts.content, posts.time, users.username FROM posts JOIN users ON posts.poster=users.uid WHERE convo_id=? ORDER BY time", [convoID], (err, rows) => {
         if (err) {
             console.error(err);
             return res.status(500).send("Database error.");
@@ -231,9 +231,8 @@ app.get("/chat/:convo_id", isAuthenticated, (req, res) => {
         if (!rows || rows.length === 0) {
             return res.status(404).send("Conversation not found.");
         };
-
         //render the page, passing posts data
-        res.render("chat", { convo_id: convoID, user: req.session.user, posts: rows });
+        res.render("chat", { convo_id: convoID, posts: rows });
     });
 });
 
@@ -245,14 +244,12 @@ app.post("/chat/:convo_id", isAuthenticated, (req, res) => {
         return res.status(400).send("Post content is required.");
     }
     //store the post in the database
-    db.run("INSERT INTO posts (convo_id, poster, content) VALUES (?, ?, ?)", [convoID, req.session.user, content], (err, rows) => {
+    db.run("INSERT INTO posts (convo_id, poster, content) VALUES (?, ?, ?)", [convoID, content], (err, rows) => {
         if (err) {
             console.error("Error saving post to database:", err);
             return;
         };
         //broadcast the message to all connected users
-        broadcast(wss, { convo_id: convoID, user: req.session.user, posts: content });
-
-        res.redirect(`/chat/${convoID}`)
+        res.render("chat", { convo_id: convoID, posts: content });
     });
 });
