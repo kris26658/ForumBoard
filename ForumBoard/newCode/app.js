@@ -241,21 +241,25 @@ app.post("/chat/:convo_id", isAuthenticated, (req, res) => {
 });
 
 //handle userPage
-app.get("userPage/:uid", isAuthenticated, (req, res) => {
-    const UID = req.params.uid
+app.get("/userPage/:poster", isAuthenticated, (req, res) => {
+    const POSTER = req.params.poster
 
     //get user's posts from the database
-    db.all("SELECT posts.poster, posts.content, posts.time, FROM posts JOIN users ON posts.poster=users.uid WHERE uid=? ORDER BY time", [UID], (err, rows) => {
+    db.all("SELECT poster, content, time FROM posts WHERE poster=? ORDER BY time", [POSTER], (err, rows) => {
         if (err) {
             console.error(err);
             return res.status(500).send("Database error.");
         };
+
+        if (!POSTER) {
+            return res.status(400).send("Invalid poster ID.");
+        }
 
         if (!rows || rows.length === 0) {
             return res.status(204).send("No posts.");
         };
 
         //render the page, passing posts data
-        res.render("chat", { poster: UID, posts: rows });
+        res.render("userPage", { poster: POSTER, posts: rows });
     });
 });
