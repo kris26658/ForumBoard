@@ -256,6 +256,6 @@ app.get("userPage/:uid", isAuthenticated, (req, res) => {
         };
 
         //render the page, passing posts data
-        res.render("chat", { uid: UID, posts: rows });
+        res.render("chat", { poster: UID, posts: rows });
     });
 });
