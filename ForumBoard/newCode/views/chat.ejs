@@ -54,8 +54,6 @@
 </head>
 
 <body>
-
-
     <div class="user-list">
         <h3>Online Users:</h3>
         <ul id="users"></ul>
@@ -63,23 +61,21 @@
 
     <div class="chat-box">
 
-        <form id="chatForm" action="/chat/<% convo_id %>" method="post">
+        <form id="chatForm" action="/chat/<%- convo_id %>" method="post">
             <input type="text" name="content" id="postInput" placeholder="Type a new post" required>
             <button type="submit">Send</button>
         </form>
 
-        <div class="postBox" action="/chat<% convo_id %>" method="get">
+        <div class="postBox" action="/chat/<% convo_id %>" method="get">
             <% if (posts.length> 0) { %>
                 <% posts.forEach((post)=> { %>
-                    <div class="postsDiv">
                         <strong>
-                            <%= post.username %>:
+                            <a href="/userPage/<%= users.uid %>"><%= post.username %></a>
                         </strong>
                         <%= post.content %>
                         <small>
-                            <%= new Date(post.time).toLocaleString() %>
+                            <%= new Date(post.time) %>
                         </small>
-                    </div>
                     <% }) %>
             <% } else { %>
                 <p>No posts yet.</p>

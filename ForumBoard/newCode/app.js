@@ -181,8 +181,7 @@ app.post("/convoList", isAuthenticated, (req, res) => {
     const convoTitle = req.body.convoTitle;
     if (!convoTitle) {
         return res.status(400).send("Conversation title is required.");
-    }
-
+    };
     db.get("SELECT * FROM convos WHERE title=?;", [convoTitle], (err, row) => {
         if (err) {
             console.error(err);
@@ -202,26 +201,10 @@ app.post("/convoList", isAuthenticated, (req, res) => {
     });
 });
 
-//handle chat
-app.get("/chat", isAuthenticated, (req, res) => {
-    const convoTitle = req.query.title;
-
-    db.get("SELECT * FROM convos WHERE uid=?;", [convoTitle], (err, rows) => {
-        if (err) {
-            console.error(err);
-            res.status(500).send("Database error.");
-        } else if (!rows) {
-            res.status(404).send("Conversation not found.");
-        } else {
-            res.render("chat", { user: req.session.user, posts: rows });
-        }
-    });
-});
-
 app.get("/chat/:convo_id", isAuthenticated, (req, res) => {
     const convoID = req.params.convo_id;
 
-    // SQL Query to fetch posts and user details from the conversation
+    //SQL Query to fetch posts and user details from the conversation
     db.all("SELECT posts.poster, posts.content, posts.time, users.username FROM posts JOIN users ON posts.poster=users.uid WHERE convo_id=? ORDER BY time", [convoID], (err, rows) => {
         if (err) {
             console.error(err);
@@ -238,18 +221,28 @@ app.get("/chat/:convo_id", isAuthenticated, (req, res) => {
 
 app.post("/chat/:convo_id", isAuthenticated, (req, res) => {
     const convoID = req.params.convo_id;
-    const { content } = req.body;
 
-    if (!content) {
-        return res.status(400).send("Post content is required.");
-    }
     //store the post in the database
-    db.run("INSERT INTO posts (convo_id, poster, content) VALUES (?, ?, ?)", [convoID, content], (err, rows) => {
+    db.run("INSERT INTO posts (poster, content, time, convo_id) VALUES (?, ?, ?, ?)", [req.session.user, req.body.content, new Date(), convoID], (err) => {
         if (err) {
-            console.error("Error saving post to database:", err);
+            console.error("Error saving post to database.");
             return;
         };
-        //broadcast the message to all connected users
-        res.render("chat", { convo_id: convoID, posts: content });
+
+        db.all("SELECT * FROM posts WHERE convo_id=?", [convoID], (err, rows) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send("Database error.");
+            };
+            //render the page, passing posts data
+            res.render("chat", { convo_id: convoID, posts: rows });
+            console.log(rows);
+
+        });
     });
+});
+
+//handle userPage
+app.get("userPage:uid", isAuthenticated, (req, res) => {
+    
 });
