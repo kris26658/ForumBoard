@@ -6,11 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat</title>
     <style>
+        * {
+            color: #e8e6e3;
+        }
+
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
             margin: 0;
-            background-color: #f4f4f4;
+            background-color: #181a1b;
         }
 
         .user-list {
@@ -18,21 +22,23 @@
             width: 150px;
             padding: 10px;
             margin-right: 20px;
-            background-color: #cacaca;
+            background-color: rgb(54, 58, 61);
         }
 
         input[type="text"] {
             width: calc(100% - 100px);
             padding: 10px;
-            border: 1px solid #ccc;
+            border: 1px solid rgb(62, 68, 70);
+            background-color: #181a1b;
         }
 
-        input[type="submit"] {
+        button {
             padding: 10px 20px;
             color: #f4f4f4;
-            background-color: #6e6e6e;
-            border: 1px solid #ccc;
+            border: 1px solid #e8e6e3;
             cursor: pointer;
+            background-color: #181a1b;
+
         }
 
         h3 {
@@ -61,17 +67,23 @@
         <div class="postBox" action="/chat/<% convo_id %>" method="get">
             <% if (posts.length> 0) { %>
                 <% posts.forEach((post)=> { %>
+                    <div class="post">
                         <strong>
-                            <a href="/userPage/<%= posts.uid %>"><%= post.username %></a>
+                            <a href="/userPage/<%= post.uid %>">
+                                <%= post.username %>
+                            </a>
                         </strong>
-                        <%= post.content %>
+                        <p>
+                            <%= post.content %>
+                        </p>
                         <small>
-                            <%= new Date(post.time) %>
+                            <%= new Date(post.time).toLocaleString() %>
                         </small>
+                    </div>
                     <% }) %>
-            <% } else { %>
-                <p>No posts yet.</p>
-            <% } %>
+                        <% } else { %>
+                            <p>No posts yet.</p>
+                            <% } %>
         </div>
     </div>
 </body>
