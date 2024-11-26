@@ -8,26 +8,27 @@
 </head>
 
 <body>
-    <div class="oldConvo">
-        <p>Choose from an existing conversation...</p>
-        <% if (convos.length > 0) { %>
-
+    <div class="container">
+        <div class="oldConvo">
+            <p>Choose from an existing conversation...</p>
+            <% if (convos.length > 0) { %>
                 <% convos.forEach(convo => { %>
                     <a href="/chat/<%= convo.uid %>" id="convoButton" class="convoTitle"><%= convo.title %></a>
                 <% }); %>
+            <% } else { %>
+                <p>No active conversations.</p>
+            <% } %>
+        </div>
+
+        <div class="newConvo">
+            <p>...or create a new one!</p>
+            <form action="/convoList" method="post">
+                <label for="newConvoTitle">Conversation Title:</label>
+                <input id="newConvoTitle" name="convoTitle" class="convoTitle" type="text"
+                    placeholder="Add a title for the new conversation" size="70" required>
+                <button type="submit">Create</button>
             </form>
-        <% } else { %>
-            <p>No active conversations.</p>
-        <% } %>
-    </div>
-    
-    <div class="newConvo">
-        <p>...or create a new one!</p>
-        <form action="/convoList" method="post">
-            <label for="newConvoTitle">Conversation Title:</label>
-            <input id="newConvoTitle" name="convoTitle" class="convoTitle" type="text" placeholder="Add a title for the new conversation" size="70" required>
-            <button type="submit">Create</button>
-        </form>
+        </div>
     </div>
 </body>
 
