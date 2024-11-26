@@ -5,73 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Conversations</title>
-    <style>
-        body {
-            background-color: #181a1b;
-            color: #e8e6e3;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-
-
-        .convoTitle {
-            display: block;
-            color: #e8e6e3;
-            text-decoration: none;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: #3a3d41;
-            border-radius: 5px;
-            text-align: center;
-        }
-
-
-        form {
-            display: flex;
-            flex-direction: column;
-        }
-
-        form label {
-            margin-bottom: 5px;
-        }
-
-        form input, form button {
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: #3a3d41;
-            color: #e8e6e3;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-
-        form button {
-            cursor: pointer;
-            background-color: #4a4d51;
-        }
-
-        form button:hover {
-            background-color: #5a5d61;
-        }
-    </style>
 </head>
 
 <body>
     <div class="oldConvo">
         <p>Choose from an existing conversation...</p>
         <% if (convos.length > 0) { %>
+
                 <% convos.forEach(convo => { %>
-                    <a href="/chat/<%= convo.uid %>" class="convoTitle">
-                        <%= convo.title %>
-                    </a>
+                    <a href="/chat/<%= convo.uid %>" id="convoButton" class="convoTitle"><%= convo.title %></a>
                 <% }); %>
+            </form>
         <% } else { %>
             <p>No active conversations.</p>
         <% } %>
@@ -87,4 +31,4 @@
     </div>
 </body>
 
-</html></form>
+</html>
