@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .user-list {
+            float: left;
+            width: 150px;
+            padding: 10px;
+            margin-right: 20px;
+            background-color: #cacaca;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 100px);
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        input[type="submit"] {
+            padding: 10px 20px;
+            color: #f4f4f4;
+            background-color: #6e6e6e;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+
+        h3 {
+            margin: 5px;
+        }
+
+        h4 {
+            margin: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="user-list">
+        <h3>Online Users:</h3>
+        <ul id="users"></ul>
+    </div>
+
+    <div class="chat-box">
+        <div class="postBox" action="/chat/<% uid %>" method="get">
+            <% if (posts.length> 0) { %>
+                <% posts.forEach((post)=> { %>
+                        <strong>
+                            <a href="/userPage/<%= users.uid %>"><%= post.username %></a>
+                        </strong>
+                        <%= post.content %>
+                        <small>
+                            <%= new Date(post.time) %>
+                        </small>
+                    <% }) %>
+            <% } else { %>
+                <p>No posts yet.</p>
+            <% } %>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -211,9 +211,6 @@ app.get("/chat/:convo_id", isAuthenticated, (req, res) => {
             return res.status(500).send("Database error.");
         };
 
-        if (!rows || rows.length === 0) {
-            return res.status(404).send("Conversation not found.");
-        };
         //render the page, passing posts data
         res.render("chat", { convo_id: convoID, posts: rows });
     });
@@ -234,6 +231,7 @@ app.post("/chat/:convo_id", isAuthenticated, (req, res) => {
                 console.error(err);
                 return res.status(500).send("Database error.");
             };
+            
             //render the page, passing posts data
             res.render("chat", { convo_id: convoID, posts: rows });
             console.log(rows);
@@ -243,6 +241,21 @@ app.post("/chat/:convo_id", isAuthenticated, (req, res) => {
 });
 
 //handle userPage
-app.get("userPage:uid", isAuthenticated, (req, res) => {
-    
+app.get("userPage/:uid", isAuthenticated, (req, res) => {
+    const UID = req.params.uid
+
+    //get user's posts from the database
+    db.all("SELECT posts.poster, posts.content, posts.time, FROM posts JOIN users ON posts.poster=users.uid WHERE uid=? ORDER BY time", [UID], (err, rows) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Database error.");
+        };
+
+        if (!rows || rows.length === 0) {
+            return res.status(204).send("No posts.");
+        };
+
+        //render the page, passing posts data
+        res.render("chat", { uid: UID, posts: rows });
+    });
 });

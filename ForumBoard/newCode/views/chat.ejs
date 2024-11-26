@@ -62,7 +62,7 @@
             <% if (posts.length> 0) { %>
                 <% posts.forEach((post)=> { %>
                         <strong>
-                            <a href="/userPage/<%= users.uid %>"><%= post.username %></a>
+                            <a href="/userPage/<%= posts.uid %>"><%= post.username %></a>
                         </strong>
                         <%= post.content %>
                         <small>
